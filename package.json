@@ -1,0 +1,18 @@
+{
+  "name": "mathathon",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Mathathon — a maths trainer that watches you work: handwritten solutions checked line by line, the whole Polish extended-matura formula sheet, and calculus taken well past it.",
+  "type": "module",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js",
+    "icons": "node tools/gen-icons.mjs",
+    "test": "node --test tools/"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.70.0",
+    "pg": "^8.13.1"
+  }
+}

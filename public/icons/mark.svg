@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Mathathon">
+  <defs>
+    <linearGradient id="mg" x1="1.40" y1="12.20" x2="98.60" y2="92.30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#2B62EE"/><stop offset="0.22" stop-color="#2E9AD8"/><stop offset="0.44" stop-color="#35B27C"/><stop offset="0.64" stop-color="#E7B23A"/><stop offset="0.83" stop-color="#EE6B2E"/><stop offset="1" stop-color="#DF4038"/></linearGradient>
+    <mask id="mc">
+      <rect width="100" height="100" fill="#fff"/>
+      <path d="M 53.91 63.00 C 53.91 58.77 49.77 58.77 49.77 64.49 C 49.77 69.80 51.03 73.58 51.03 78.89 C 51.03 84.60 46.89 84.60 46.89 80.38" fill="none" stroke="#000" stroke-width="4.32" stroke-linecap="round"/>
+    </mask>
+  </defs>
+  <g mask="url(#mc)">
+    <g fill="none" stroke="url(#mg)" stroke-linecap="round">
+      <path stroke-width="5.22" d="M 56.75 38.75 C 59.90 30.20 65.30 23.00 72.50 20.30 M 43.25 38.75 C 40.10 30.20 34.70 23.00 27.50 20.30 M 59.45 42.80 C 64.40 37.40 70.70 32.00 77.00 30.20 M 40.55 42.80 C 35.60 37.40 29.30 32.00 23.00 30.20 M 59.45 47.75 C 65.30 44.60 71.60 44.60 77.90 47.30 M 40.55 47.75 C 34.70 44.60 28.40 44.60 22.10 47.30 M 56.75 52.70 C 62.60 54.50 68.90 58.10 75.20 61.70 M 43.25 52.70 C 37.40 54.50 31.10 58.10 24.80 61.70"/>
+      <path stroke-width="3.24" d="M 72.50 20.30 C 79.70 17.60 85.10 14.90 90.50 14.90 M 27.50 20.30 C 20.30 17.60 14.90 14.90 9.50 14.90 M 77.00 30.20 C 84.20 28.40 91.40 30.20 95.90 32.90 M 23.00 30.20 C 15.80 28.40 8.60 30.20 4.10 32.90 M 77.90 47.30 C 85.10 50.00 92.30 54.50 96.80 59.90 M 22.10 47.30 C 14.90 50.00 7.70 54.50 3.20 59.90 M 75.20 61.70 C 82.40 66.20 87.80 74.30 90.50 83.30 M 24.80 61.70 C 17.60 66.20 12.20 74.30 9.50 83.30"/>
+    </g>
+    <g fill="url(#mg)">
+      <ellipse cx="50.00" cy="69.80" rx="13.95" ry="18.00"/>
+      <ellipse cx="50.00" cy="46.40" rx="9.90" ry="9.45"/>
+    </g>
+  </g>
+</svg>
