@@ -368,10 +368,23 @@ const TUTOR_SCHEMA = {
       description: '2-4 things the student could say or write next, as they would say them, first person, short',
       items: bilingual('One suggestion'),
     },
+    chart: {
+      type: 'array',
+      description: 'OPTIONAL, at most 3: when a picture would genuinely help (asymptotes, extrema, '
+        + 'intersections, the shape of a graph), expressions in x to plot. Plain calculator syntax, '
+        + 'NOT LaTeX: x^2-3*x+2, sin(2*x), (x+1)/(x-2), e^x, ln(x), sqrt(x), abs(x), tg(x). '
+        + 'Multiplication always explicit (3*x, never 3x). Empty array when a chart adds nothing.',
+      items: { type: 'string' },
+    },
+    chartRange: {
+      type: 'array',
+      description: 'With chart: [xMin, xMax] worth looking at. Empty array for the default.',
+      items: { type: 'number' },
+    },
     nextTask: bilingual('If the student is ready to move on, the next thing to try; empty string otherwise'),
     revealedAnswer: { type: 'boolean', description: 'true only if the student explicitly asked for the answer and you gave it' },
   },
-  required: ['reply', 'suggestions', 'nextTask', 'revealedAnswer'],
+  required: ['reply', 'suggestions', 'chart', 'chartRange', 'nextTask', 'revealedAnswer'],
   additionalProperties: false,
 };
 

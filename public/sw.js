@@ -18,6 +18,7 @@ const SHELL = [
   '/js/i18n.js',
   '/js/tex.js',
   '/js/ink.js',
+  '/js/plot.js',
   '/js/srs.js',
   '/js/train.js',
   '/js/quiz.js',

@@ -12,6 +12,7 @@ import { t, pick, lang } from './i18n.js';
 import { el, fill, clear, toast, busy, tap } from './ui.js';
 import { prose, tex } from './tex.js';
 import { InkSurface, INKS, makeScribbleWatcher } from './ink.js';
+import { plotExpr } from './plot.js';
 import { content, reportError } from './main.js';
 
 const PAUSE_MS = 1800;        // how long the pen must rest before a live check
@@ -25,6 +26,7 @@ export function mountTrain(host) {
     verdict: null,
     ink: null,
     live: localStorage.getItem('mathathon.live') !== '0',
+    snap: localStorage.getItem('mathathon.snap') === '1',
     checking: false,
     lastCheckedStrokes: 0,
     chat: [],
@@ -138,6 +140,8 @@ export function mountTrain(host) {
       const surface = new InkSurface({ wrap, dry, wet, guides }, {
         penOnly: localStorage.getItem('mathathon.penOnly') === '1',
         guideStyle: localStorage.getItem('mathathon.guides') || 'ruled',
+        snapShapes: state.snap,
+        onSnap: (kind) => { tap(14); toast(t(`train.snapped.${kind}`)); },
         onStrokeEnd: (stroke, s) => { watcher(stroke); scheduleLive(s); },
         onChange: () => savePage(),
       });
@@ -174,6 +178,19 @@ export function mountTrain(host) {
       },
     }, t('train.erase'));
 
+    // Hold-to-snap is off while writing and on while drawing figures: the same
+    // gesture that cleans up a circle would mangle a hastily written 0.
+    const snapToggle = el('button.btn.sm' + (state.snap ? '.primary' : '.ghost'), {
+      onclick: (e) => {
+        state.snap = !state.snap;
+        localStorage.setItem('mathathon.snap', state.snap ? '1' : '0');
+        if (state.ink) state.ink.snapShapes = state.snap;
+        e.target.classList.toggle('primary', state.snap);
+        e.target.classList.toggle('ghost', !state.snap);
+        toast(t(state.snap ? 'train.snapOn' : 'train.snapOff'));
+      },
+    }, t('train.snap'));
+
     const liveToggle = el('button.btn.sm' + (state.live ? '.primary' : '.ghost'), {
       onclick: (e) => {
         state.live = !state.live;
@@ -186,6 +203,7 @@ export function mountTrain(host) {
     return el('div.tools', {},
       ...swatches,
       eraser,
+      snapToggle,
       el('button.btn.sm.ghost', { onclick: () => state.ink?.undo() }, t('train.undo')),
       el('button.btn.sm.ghost', {
         onclick: () => { state.ink?.clearInk(); state.verdict = null; state.lastCheckedStrokes = 0; renderVerdict(); },
@@ -369,6 +387,16 @@ export function mountTrain(host) {
         });
         state.chat.push({ role: 'assistant', text: pick(out.reply) });
         paint();
+        // The tutor can hand back expressions worth seeing; a wrong expression
+        // must not take the chat down, so plotting failures just skip the chart.
+        if (out.chart?.length) {
+          try {
+            const [xMin, xMax] = out.chartRange?.length === 2 ? out.chartRange : [-6, 6];
+            const holder = el('div.card.flat', {}, plotExpr(out.chart.slice(0, 3), { xMin, xMax, height: 300 }));
+            log.append(holder);
+            log.scrollTop = log.scrollHeight;
+          } catch { /* unparseable expression — no chart */ }
+        }
         fill(sugg, (out.suggestions || []).map((s) =>
           el('button', { onclick: () => say(pick(s)) }, pick(s))));
         if (out.revealedAnswer) {

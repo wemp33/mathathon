@@ -143,6 +143,203 @@ export function outlineToPath2D(outline) {
   return path;
 }
 
+/* ═══ shape recognition ══════════════════════════════════════════════════
+   The Notability gesture: draw a shape and hold the pen still without lifting;
+   the rough stroke snaps to clean geometry. Recognition is deliberately
+   conservative — a snap that misfires on handwriting is worse than no snap at
+   all, so anything ambiguous is left as ink. Snapped shapes stay ordinary
+   strokes whose points lie on the clean curve: the renderer, the sync format
+   and the critique PNG all keep working unchanged.                          */
+
+const centroidOf = (pts) => {
+  let x = 0, y = 0;
+  for (const p of pts) { x += p.x; y += p.y; }
+  return { x: x / pts.length, y: y / pts.length };
+};
+
+const pathLength = (pts) => {
+  let L = 0;
+  for (let i = 1; i < pts.length; i++) L += dist(pts[i - 1], pts[i]);
+  return L;
+};
+
+// Perpendicular distance of p from the a→b line.
+function perpDist(p, a, b) {
+  const vx = b.x - a.x, vy = b.y - a.y;
+  const len = Math.hypot(vx, vy) || 1;
+  return Math.abs((p.x - a.x) * vy - (p.y - a.y) * vx) / len;
+}
+
+/**
+ * Corners of a CLOSED path.
+ *
+ * Ramer-Douglas-Peucker cannot be run on a loop directly: its first and last
+ * points coincide, so the baseline it measures every deviation against has
+ * zero length, every distance comes out ~0, and it happily reports that the
+ * whole rectangle is one straight segment. Splitting the loop at the point
+ * farthest from the start gives two open arcs, which RDP handles correctly.
+ */
+function cornersOfClosed(pts, eps) {
+  let far = 0;
+  let farD = -1;
+  for (let i = 1; i < pts.length; i++) {
+    const d = dist(pts[0], pts[i]);
+    if (d > farD) { farD = d; far = i; }
+  }
+  if (far < 2 || far > pts.length - 3) return rdp(pts, eps);
+  const a = rdp(pts.slice(0, far + 1), eps);
+  const b = rdp(pts.slice(far), eps);
+  return a.slice(0, -1).concat(b);
+}
+
+// Ramer-Douglas-Peucker, used to find a polygon's corners.
+function rdp(pts, eps) {
+  if (pts.length < 3) return pts.slice();
+  let maxD = 0, idx = 0;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const d = perpDist(pts[i], pts[0], pts[pts.length - 1]);
+    if (d > maxD) { maxD = d; idx = i; }
+  }
+  if (maxD <= eps) return [pts[0], pts[pts.length - 1]];
+  const left = rdp(pts.slice(0, idx + 1), eps);
+  return left.slice(0, -1).concat(rdp(pts.slice(idx), eps));
+}
+
+/**
+ * Try to read a stroke as a shape. Returns null when unsure.
+ * @returns {null | {kind:'line'|'circle'|'ellipse'|'rect'|'triangle'|'polygon', pts:Array}}
+ */
+export function recogniseShape(rawPts) {
+  // The tail of the stroke is the hold itself — jittering on one spot — and
+  // would drag every fit toward that point, so it is trimmed first.
+  const pts = trimHoldTail(rawPts);
+  if (pts.length < 8) return null;
+
+  const L = pathLength(pts);
+  const chord = dist(pts[0], pts[pts.length - 1]);
+  const box = boundsOf(pts);
+  const diag = Math.hypot(box.w, box.h);
+  if (diag < 24) return null;              // too small to mean anything
+
+  /* ---- line: the path barely exceeds its chord and stays near it ---- */
+  if (chord > 30 && L / chord < 1.08) {
+    let maxDev = 0;
+    for (const p of pts) maxDev = Math.max(maxDev, perpDist(p, pts[0], pts[pts.length - 1]));
+    if (maxDev < Math.max(6, chord * 0.045)) {
+      let a = { ...pts[0] }, b = { ...pts[pts.length - 1] };
+      // Snap to horizontal / vertical / 45° when within a few degrees —
+      // axes and asymptotes are what these lines usually are.
+      const ang = Math.atan2(b.y - a.y, b.x - a.x);
+      const step = Math.PI / 4;
+      const snapped = Math.round(ang / step) * step;
+      if (Math.abs(ang - snapped) < 0.09) {
+        const len = dist(a, b);
+        b = { x: a.x + Math.cos(snapped) * len, y: a.y + Math.sin(snapped) * len, p: b.p, t: b.t };
+      }
+      return { kind: 'line', pts: sampleLine(a, b) };
+    }
+    return null;
+  }
+
+  /* ---- closed shapes: the pen came back to its start ---- */
+  if (chord > diag * 0.28) return null;    // open curve — leave as ink
+
+  const c = centroidOf(pts);
+  const radii = pts.map((p) => Math.hypot(p.x - c.x, p.y - c.y));
+  const rMean = radii.reduce((a, r) => a + r, 0) / radii.length;
+
+  // Circle: radius variation small relative to the mean.
+  const rVar = Math.sqrt(radii.reduce((a, r) => a + (r - rMean) ** 2, 0) / radii.length);
+  if (rVar / rMean < 0.13 && rMean > 14) {
+    return { kind: 'circle', pts: sampleEllipse(c, rMean, rMean) };
+  }
+
+  // Corner count separates rectangles and triangles from ellipses.
+  const corners = cornersOfClosed(closeUp(pts), Math.max(7, diag * 0.045));
+  const nCorners = corners.length - 1;     // first == last after closing
+
+  if (nCorners === 4) {
+    // Rectangle when the sides alternate near-horizontal / near-vertical, or
+    // at least meet at roughly right angles; otherwise an honest quadrilateral.
+    const rect = fitRect(corners);
+    if (rect) return { kind: 'rect', pts: rect };
+    return { kind: 'polygon', pts: samplePolygon(corners) };
+  }
+  if (nCorners === 3) {
+    return { kind: 'triangle', pts: samplePolygon(corners) };
+  }
+
+  // Ellipse: everything round that was not round enough to be a circle.
+  const rx = box.w / 2, ry = box.h / 2;
+  if (rx > 12 && ry > 12) {
+    const cc = { x: box.x + rx, y: box.y + ry };
+    let dev = 0;
+    for (const p of pts) {
+      const nx = (p.x - cc.x) / rx, ny = (p.y - cc.y) / ry;
+      dev += Math.abs(Math.hypot(nx, ny) - 1);
+    }
+    if (dev / pts.length < 0.12) return { kind: 'ellipse', pts: sampleEllipse(cc, rx, ry) };
+  }
+  return null;
+}
+
+function trimHoldTail(pts, still = 3.5) {
+  let end = pts.length - 1;
+  while (end > 4 && dist(pts[end], pts[end - 1]) < still) end--;
+  return pts.slice(0, end + 1);
+}
+
+function boundsOf(pts) {
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const p of pts) {
+    if (p.x < x0) x0 = p.x; if (p.y < y0) y0 = p.y;
+    if (p.x > x1) x1 = p.x; if (p.y > y1) y1 = p.y;
+  }
+  return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+}
+
+const closeUp = (pts) => (dist(pts[0], pts[pts.length - 1]) > 1 ? pts.concat([{ ...pts[0] }]) : pts);
+
+// Clean geometry back into stroke points, evenly spaced, constant pressure —
+// so the outline renderer draws a calm, even line.
+function samplePts(fn, n, from) {
+  const out = [];
+  for (let i = 0; i <= n; i++) out.push({ ...fn(i / n), p: 0.55, t: (from?.t ?? 0) + i });
+  return out;
+}
+const sampleLine = (a, b) => samplePts((s) => ({ x: lerp(a.x, b.x, s), y: lerp(a.y, b.y, s) }), 24, a);
+const sampleEllipse = (c, rx, ry) => samplePts((s) => ({
+  x: c.x + Math.cos(s * Math.PI * 2 - Math.PI / 2) * rx,
+  y: c.y + Math.sin(s * Math.PI * 2 - Math.PI / 2) * ry,
+}), 64);
+function samplePolygon(corners) {
+  const out = [];
+  for (let i = 0; i < corners.length - 1; i++) {
+    const seg = samplePts((s) => ({ x: lerp(corners[i].x, corners[i + 1].x, s), y: lerp(corners[i].y, corners[i + 1].y, s) }), 16);
+    out.push(...(i ? seg.slice(1) : seg));
+  }
+  return out;
+}
+function fitRect(corners) {
+  // Axis-aligned bounding box of the corners, accepted when each drawn corner
+  // is near one of the box's own corners — a tilted rectangle stays a polygon.
+  const quad = corners.slice(0, 4);
+  const box = boundsOf(quad);
+  if (box.w < 18 || box.h < 18) return null;
+  const target = [
+    { x: box.x, y: box.y }, { x: box.x + box.w, y: box.y },
+    { x: box.x + box.w, y: box.y + box.h }, { x: box.x, y: box.y + box.h },
+  ];
+  const tol = Math.max(12, Math.hypot(box.w, box.h) * 0.12);
+  const used = new Set();
+  for (const q of quad) {
+    const hit = target.findIndex((t2, i) => !used.has(i) && Math.hypot(q.x - t2.x, q.y - t2.y) < tol);
+    if (hit < 0) return null;
+    used.add(hit);
+  }
+  return samplePolygon([...target, target[0]]);
+}
+
 /* ═══ surface ════════════════════════════════════════════════════════════ */
 
 export const TOOLS = {
@@ -185,6 +382,14 @@ export class InkSurface {
     this.dpr = 1;
     this.onStrokeEnd = opts.onStrokeEnd || (() => {});
     this.onChange = opts.onChange || (() => {});
+
+    // Hold-to-snap: draw a shape, keep the pen down and still, and the stroke
+    // becomes clean geometry. Off by default for handwriting; the Trening view
+    // turns it on when the user asks for figures.
+    this.snapShapes = opts.snapShapes ?? false;
+    this.onSnap = opts.onSnap || (() => {});
+    this.holdMs = opts.holdMs ?? 550;
+    this._holdTimer = null;
 
     this.supportsCoalesced = typeof PointerEvent !== 'undefined'
       && typeof PointerEvent.prototype.getCoalescedEvents === 'function';
@@ -231,8 +436,47 @@ export class InkSurface {
     ctx.clearRect(0, 0, this.w, this.h);
     if (this.guideStyle === 'none') return;
 
-    const line = 'rgba(46,117,80,.16)';
-    const faint = 'rgba(46,117,80,.09)';
+    const line = 'rgba(43,98,238,.13)';
+    const faint = 'rgba(43,98,238,.07)';
+
+    // Squared paper, for figures and sketched graphs. Every fifth line is
+    // darker, the way real graph paper is, so counting units is possible
+    // without a ruler.
+    if (this.guideStyle === 'grid') {
+      const cell = 26;
+      for (let i = 0, x = 0; x < this.w; i++, x += cell) {
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = i % 5 === 0 ? line : faint;
+        ctx.moveTo(x + 0.5, 0);
+        ctx.lineTo(x + 0.5, this.h);
+        ctx.stroke();
+      }
+      for (let i = 0, y = 0; y < this.h; i++, y += cell) {
+        ctx.beginPath();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = i % 5 === 0 ? line : faint;
+        ctx.moveTo(0, y + 0.5);
+        ctx.lineTo(this.w, y + 0.5);
+        ctx.stroke();
+      }
+      return;
+    }
+
+    // Dot grid: enough to align by, quiet enough to disappear behind working.
+    if (this.guideStyle === 'dots') {
+      const cell = 26;
+      ctx.fillStyle = 'rgba(43,98,238,.26)';
+      for (let x = cell; x < this.w; x += cell) {
+        for (let y = cell; y < this.h; y += cell) {
+          ctx.beginPath();
+          ctx.arc(x, y, 1.1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      return;
+    }
+
     const step = this.guideStyle === 'fourline' ? 88 : 44;
 
     ctx.lineWidth = 1;
@@ -348,12 +592,39 @@ export class InkSurface {
       ? e.getPredictedEvents().map((pe) => this._pt(pe))
       : [];
 
+    this._armHold(stroke, e.pointerId);
     this._paintWet();
+  }
+
+  /* ---- hold-to-snap ----
+     The timer is reset on every move that actually travels, so it only fires
+     when the pen has genuinely stopped. Snapping mid-stroke rather than on
+     lift is the whole point: you see the shape settle while still holding,
+     and lifting immediately keeps your rough stroke instead. */
+  _armHold(stroke, pointerId) {
+    if (!this.snapShapes || stroke.snapped) return;
+    const pts = stroke.points;
+    const n = pts.length;
+    if (n > 2 && dist(pts[n - 1], pts[n - 2]) > 2.2) {
+      clearTimeout(this._holdTimer);
+      this._holdTimer = setTimeout(() => {
+        const live = this.active.get(pointerId);
+        if (!live || live !== stroke || stroke.snapped) return;
+        const shape = recogniseShape(stroke.points);
+        if (!shape) return;
+        stroke.points = shape.pts;
+        stroke.snapped = shape.kind;
+        stroke.predicted = null;
+        this._paintWet();
+        this.onSnap(shape.kind, stroke);
+      }, this.holdMs);
+    }
   }
 
   _up(e, cancelled = false) {
     const stroke = this.active.get(e.pointerId);
     if (!stroke) return;
+    clearTimeout(this._holdTimer);
     this.active.delete(e.pointerId);
     try { this.wet.releasePointerCapture?.(e.pointerId); } catch { /* already released */ }
 
@@ -462,7 +733,7 @@ export class InkSurface {
       w: this.w,
       h: this.h,
       strokes: this.strokes.map((s) => ({
-        id: s.id, tool: s.tool, colour: s.colour, pen: s.pen,
+        id: s.id, tool: s.tool, colour: s.colour, pen: s.pen, snapped: s.snapped || undefined,
         pts: s.points.map((p) => [
           Math.round(p.x * 10) / 10,
           Math.round(p.y * 10) / 10,

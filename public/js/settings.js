@@ -80,7 +80,7 @@ export function mountSettings(host) {
           onclick: () => { localStorage.setItem('mathathon.penOnly', penOnly ? '0' : '1'); render(); },
         }, penOnly ? 'ON' : 'OFF')),
       el('div.sect-label', { style: { marginTop: '12px' } }, t('settings.guides')),
-      el('div.seg', {}, ...[['ruled', 'settings.guides.ruled'], ['fourline', 'settings.guides.grid'], ['none', 'settings.guides.none']]
+      el('div.seg', {}, ...[['ruled', 'settings.guides.ruled'], ['grid', 'settings.guides.grid'], ['dots', 'settings.guides.dots'], ['none', 'settings.guides.none']]
         .map(([v, key]) => el(`button${guides === v ? '.on' : ''}`, {
           onclick: () => { localStorage.setItem('mathathon.guides', v); render(); },
         }, t(key)))));
