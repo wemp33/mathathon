@@ -12,7 +12,7 @@ export default {
   topics: [
     /* ─────────────────────────────────────────────────────────────────── */
     {
-      id: 'monotonicznosc-ekstrema',
+      id: 'monotonicznosc-ekstrema-adv',
       title: { pl: 'Monotoniczność i ekstrema', en: 'Monotonicity and extrema' },
       level: 4,
       prereq: ['tablica-pochodnych'],
@@ -44,7 +44,7 @@ export default {
       ],
       problems: [
         {
-          id: 'monotonicznosc-ekstrema-l3-01',
+          id: 'monotonicznosc-ekstrema-adv-l3-01',
           skill: 'przedzialy-monotonicznosci',
           level: 3,
           prompt: { pl: 'Wyznacz przedziały monotoniczności funkcji $f(x)=x^{3}-3x$.', en: 'Find the intervals of monotonicity of $f(x)=x^{3}-3x$.' },
@@ -58,7 +58,7 @@ export default {
           trap: { pl: 'Zapisanie „rosnąca na $(-\\infty,-1)\\cup(1,\\infty)$" jako jednego przedziału — monotoniczność orzeka się na każdym przedziale osobno.', en: 'Writing the union as one interval — monotonicity is per-interval.' },
         },
         {
-          id: 'monotonicznosc-ekstrema-l4-01',
+          id: 'monotonicznosc-ekstrema-adv-l4-01',
           skill: 'ekstrema-lokalne',
           level: 4,
           prompt: { pl: 'Wyznacz ekstrema lokalne funkcji $f(x)=x e^{-x}$.', en: 'Find the local extrema of $f(x)=x e^{-x}$.' },
@@ -72,7 +72,7 @@ export default {
           trap: { pl: 'Zgubienie czynnika z reguły iloczynu i policzenie $f\'=e^{-x}$ — wtedy ekstremów „nie ma”.', en: 'Losing the product-rule term gives $f\'=e^{-x}$ and "no extrema".' },
         },
         {
-          id: 'monotonicznosc-ekstrema-l5-01',
+          id: 'monotonicznosc-ekstrema-adv-l5-01',
           skill: 'najwieksza-najmniejsza',
           level: 5,
           prompt: { pl: 'Wyznacz najmniejszą i największą wartość funkcji $f(x)=x^{3}-6x^{2}+9x+1$ na przedziale $\\langle 0, 5\\rangle$.', en: 'Find the least and greatest values of $f(x)=x^{3}-6x^{2}+9x+1$ on $[0,5]$.' },
@@ -93,7 +93,7 @@ export default {
       id: 'wypuklosc-przegiecia',
       title: { pl: 'Wypukłość i punkty przegięcia', en: 'Convexity and inflection' },
       level: 5,
-      prereq: ['monotonicznosc-ekstrema'],
+      prereq: ['monotonicznosc-ekstrema-adv'],
       theory: {
         pl: 'Druga pochodna mierzy, jak wykres się wygina: $f\'\'>0$ na przedziale daje funkcję wypukłą '
           + '(wykres nad stycznymi, „uśmiech”), $f\'\'<0$ — wklęsłą. Punkt przegięcia to miejsce, gdzie '
@@ -169,7 +169,7 @@ export default {
       id: 'optymalizacja',
       title: { pl: 'Optymalizacja', en: 'Optimisation' },
       level: 5,
-      prereq: ['monotonicznosc-ekstrema'],
+      prereq: ['monotonicznosc-ekstrema-adv'],
       theory: {
         pl: 'Zadanie optymalizacyjne ma stały rytuał i każdy krok bywa punktowany osobno: (1) nazwij '
           + 'zmienną, (2) zapisz funkcję celu, (3) użyj warunku z treści, by zejść do JEDNEJ zmiennej, '
