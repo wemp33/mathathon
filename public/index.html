@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<!-- viewport-fit=cover is what lets the app paint under the Dynamic Island and
+     the home indicator; every edge inset below is then taken back explicitly. -->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#FCFAF5">
+<title>Mathathon</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="/icons/icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mathathon">
+<meta name="format-detection" content="telephone=no">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════
+   Mathathon — cream ground, grey wash, one gradient.
+
+   The gradient is the whole palette. It is never used as a flat fill on a
+   large area (it would fight everything) — it appears on the mark, on the
+   active tab, on progress fills, and clipped to text on the display type.
+   Everything else is cream, grey and ink.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --ground: #FCFAF5;
+  --panel:  #FFFFFF;
+  --wash:   #F1EFE9;
+  --wash-2: #E7E4DC;
+  --line:   #E2DED5;
+  --line-2: #D3CEC3;
+  --ink:    #191B1A;
+  --ink-2:  #4A4A46;
+  --muted:  #797569;
+
+  /* The Antigravity sweep. Same six stops as the icon generator. */
+  --g1: #2B62EE; --g2: #2E9AD8; --g3: #35B27C;
+  --g4: #E7B23A; --g5: #EE6B2E; --g6: #DF4038;
+  --grad: linear-gradient(105deg, var(--g1) 0%, var(--g2) 22%, var(--g3) 44%,
+                          var(--g4) 64%, var(--g5) 83%, var(--g6) 100%);
+
+  --ok:    #2F7A55;
+  --warn:  #B87514;
+  --bad:   #C0392B;
+
+  --serif: ui-serif, "New York", Georgia, "Iowan Old Style", serif;
+  --sans:  -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --mono:  ui-monospace, "SF Mono", Menlo, monospace;
+
+  --r:   14px;
+  --r-s: 10px;
+  --shadow: 0 1px 2px rgba(30,26,16,.05), 0 6px 20px -8px rgba(30,26,16,.14);
+
+  --safe-t: env(safe-area-inset-top, 0px);
+  --safe-b: env(safe-area-inset-bottom, 0px);
+  --safe-l: env(safe-area-inset-left, 0px);
+  --safe-r: env(safe-area-inset-right, 0px);
+  --tabbar: 58px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+html, body {
+  margin: 0; padding: 0; height: 100%;
+  background: var(--ground);
+  color: var(--ink);
+  font: 400 16px/1.5 var(--sans);
+  -webkit-font-smoothing: antialiased;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior: none;
+}
+body { overflow: hidden; }
+
+h1, h2, h3, .display { font-family: var(--serif); font-weight: 600; letter-spacing: -.012em; margin: 0; }
+h1 { font-size: 27px; line-height: 1.2; }
+h2 { font-size: 20px; line-height: 1.25; }
+h3 { font-size: 16.5px; }
+p  { margin: 0 0 .7em; }
+p:last-child { margin-bottom: 0; }
+a  { color: inherit; }
+small { font-size: 13px; color: var(--muted); }
+
+button, input, textarea, select { font: inherit; color: inherit; }
+button { border: 0; background: none; cursor: pointer; padding: 0; }
+
+.grad-text {
+  background: var(--grad);
+  -webkit-background-clip: text; background-clip: text;
+  color: transparent;
+}
+
+/* ── layout ───────────────────────────────────────────────────────────── */
+
+#app { display: none; height: 100%; flex-direction: column; }
+#app.on { display: flex; }
+
+header.top {
+  flex: 0 0 auto;
+  padding: calc(var(--safe-t) + 10px) calc(var(--safe-r) + 16px) 10px calc(var(--safe-l) + 16px);
+  display: flex; align-items: center; gap: 10px;
+  background: var(--ground);
+  border-bottom: 1px solid var(--line);
+}
+header.top .mark { width: 30px; height: 30px; flex: 0 0 auto; }
+header.top .title { font-family: var(--serif); font-size: 19px; font-weight: 600; letter-spacing: -.02em; }
+header.top .spacer { flex: 1; }
+header.top .chip {
+  font-size: 12.5px; color: var(--muted); background: var(--wash);
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+}
+
+main {
+  flex: 1 1 auto; min-height: 0;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+  padding: 16px calc(var(--safe-r) + 16px) calc(var(--safe-b) + var(--tabbar) + 24px) calc(var(--safe-l) + 16px);
+}
+.view { display: none; }
+.view.on { display: block; }
+.view > * + * { margin-top: 14px; }
+
+/* Tab bar. Fixed rather than sticky because an installed iOS PWA does not
+   reliably repaint a sticky footer when the keyboard animates away. */
+nav.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+  display: grid; grid-template-columns: repeat(5, 1fr);
+  padding: 0 var(--safe-r) var(--safe-b) var(--safe-l);
+  background: color-mix(in srgb, var(--ground) 88%, transparent);
+  -webkit-backdrop-filter: saturate(180%) blur(16px);
+  backdrop-filter: saturate(180%) blur(16px);
+  border-top: 1px solid var(--line);
+}
+nav.tabs button {
+  height: var(--tabbar);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
+  font-size: 10.5px; letter-spacing: .01em; color: var(--muted);
+}
+nav.tabs button svg { width: 21px; height: 21px; stroke: currentColor; fill: none; stroke-width: 1.7; }
+nav.tabs button.on { color: var(--ink); }
+nav.tabs button.on svg { stroke: url(#tabgrad); stroke-width: 2; }
+
+/* ── surfaces ─────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+  padding: 15px 16px;
+  box-shadow: var(--shadow);
+}
+.card.flat { box-shadow: none; background: var(--wash); }
+.card > * + * { margin-top: 11px; }
+.card h2 + p, .card h3 + p { margin-top: 5px; }
+
+.row { display: flex; align-items: center; gap: 10px; }
+.row.between { justify-content: space-between; }
+.row.wrap { flex-wrap: wrap; }
+.stack { display: flex; flex-direction: column; gap: 10px; }
+.grow { flex: 1; min-width: 0; }
+
+.sect-label {
+  font: 600 11.5px/1 var(--sans); letter-spacing: .07em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px;
+}
+
+/* ── controls ─────────────────────────────────────────────────────────── */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  min-height: 44px; padding: 0 18px; border-radius: 11px;
+  background: var(--wash); border: 1px solid var(--line-2);
+  font-weight: 550; font-size: 15.5px;
+  transition: transform .08s ease, opacity .15s ease;
+}
+.btn:active { transform: scale(.975); }
+.btn[disabled] { opacity: .42; pointer-events: none; }
+.btn.primary { background: var(--grad); border-color: transparent; color: #fff; text-shadow: 0 1px 1px rgba(0,0,0,.16); }
+.btn.ghost { background: transparent; border-color: var(--line); }
+.btn.quiet { background: transparent; border: 0; color: var(--muted); min-height: 36px; padding: 0 8px; }
+.btn.wide { width: 100%; }
+.btn.sm { min-height: 34px; font-size: 14px; padding: 0 12px; border-radius: 9px; }
+.btn.danger { color: var(--bad); border-color: color-mix(in srgb, var(--bad) 32%, var(--line)); }
+
+input[type=text], input[type=search], textarea {
+  width: 100%; min-height: 44px; padding: 10px 13px;
+  background: var(--panel); border: 1px solid var(--line-2); border-radius: 11px;
+  outline: none;
+}
+input:focus, textarea:focus { border-color: var(--g2); box-shadow: 0 0 0 3px color-mix(in srgb, var(--g2) 16%, transparent); }
+textarea { min-height: 90px; resize: vertical; font-family: var(--mono); font-size: 15px; }
+
+.seg { display: flex; background: var(--wash); border: 1px solid var(--line); border-radius: 11px; padding: 3px; gap: 3px; }
+.seg button { flex: 1; min-height: 34px; border-radius: 8px; font-size: 14px; font-weight: 550; color: var(--muted); }
+.seg button.on { background: var(--panel); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,.07); }
+
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12.5px; font-weight: 550; padding: 4px 10px; border-radius: 999px;
+  background: var(--wash); border: 1px solid var(--line); color: var(--ink-2);
+}
+.pill.ok   { background: color-mix(in srgb, var(--ok) 11%, var(--panel));   border-color: color-mix(in srgb, var(--ok) 28%, var(--line));   color: var(--ok); }
+.pill.warn { background: color-mix(in srgb, var(--warn) 12%, var(--panel)); border-color: color-mix(in srgb, var(--warn) 30%, var(--line)); color: var(--warn); }
+.pill.bad  { background: color-mix(in srgb, var(--bad) 10%, var(--panel));  border-color: color-mix(in srgb, var(--bad) 26%, var(--line));  color: var(--bad); }
+
+/* ── maths ────────────────────────────────────────────────────────────── */
+
+math { font-size: 1.06em; }
+math[display=block] { display: block; margin: .55em 0; overflow-x: auto; overflow-y: hidden; }
+.tex-error { color: var(--bad); font-family: var(--mono); font-size: 13px; }
+.formula {
+  background: var(--wash); border: 1px solid var(--line); border-radius: var(--r-s);
+  padding: 10px 13px; overflow-x: auto;
+}
+
+/* ── the numeric keypad ───────────────────────────────────────────────────
+   The house pattern: a real input with inputmode="none" keeps the caret and
+   the native selection handles while the system keyboard stays down, and this
+   pad writes into it. Four big digits beat a cramped phone keyboard for a
+   passcode, and it means the layout never jumps. */
+
+.pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; }
+.pad button {
+  height: 58px; border-radius: 13px; background: var(--panel);
+  border: 1px solid var(--line-2); font: 500 24px/1 var(--sans);
+  box-shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+.pad button:active { background: var(--wash-2); transform: scale(.97); }
+.pad button.wide { grid-column: span 2; font-size: 16px; font-weight: 550; }
+
+.dots { display: flex; gap: 13px; justify-content: center; padding: 6px 0 2px; }
+.dots i {
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 1.5px solid var(--line-2); background: transparent;
+  transition: background .12s ease, border-color .12s ease, transform .12s ease;
+}
+.dots i.on { background: var(--grad); border-color: transparent; transform: scale(1.12); }
+
+/* ── login ────────────────────────────────────────────────────────────── */
+
+#gate {
+  position: fixed; inset: 0; z-index: 60;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: calc(var(--safe-t) + 28px) 22px calc(var(--safe-b) + 28px);
+  background: var(--ground);
+  overflow-y: auto;
+}
+#gate .box { width: 100%; max-width: 340px; }
+#gate .mark { width: 92px; height: 92px; margin: 0 auto 14px; display: block; }
+#gate h1 { text-align: center; font-size: 32px; margin-bottom: 3px; }
+#gate .sub { text-align: center; color: var(--muted); font-size: 14.5px; margin-bottom: 22px; }
+#gate .err { color: var(--bad); font-size: 14px; text-align: center; min-height: 20px; margin-top: 10px; }
+
+/* ── the ink surface ──────────────────────────────────────────────────── */
+
+.paper {
+  position: relative; width: 100%; height: 62vh; min-height: 300px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
+  overflow: hidden; box-shadow: var(--shadow);
+}
+.paper canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  /* Without this the page pans and pinch-zooms under the pen. */
+  touch-action: none; -webkit-user-select: none; user-select: none;
+}
+.paper canvas.guides { z-index: 0; }
+.paper canvas.dry    { z-index: 1; }
+.paper canvas.wet    { z-index: 2; }
+.paper .marks { position: absolute; inset: 0; z-index: 3; pointer-events: none; }
+.paper .marks .flag {
+  position: absolute; left: 0; width: 100%; height: 0;
+  border-top: 2px solid transparent;
+}
+.paper .marks .flag.wrong   { border-color: color-mix(in srgb, var(--bad) 55%, transparent); }
+.paper .marks .flag.suspect { border-color: color-mix(in srgb, var(--warn) 55%, transparent); border-top-style: dashed; }
+
+.tools { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; }
+.tools .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line-2); }
+.tools .swatch.on { border-color: var(--ink); transform: scale(1.08); }
+
+/* ── verdict ──────────────────────────────────────────────────────────── */
+
+.lines { display: flex; flex-direction: column; gap: 0; }
+.lines .ln {
+  display: flex; gap: 9px; align-items: flex-start;
+  padding: 7px 0; border-bottom: 1px solid var(--line);
+}
+.lines .ln:last-child { border-bottom: 0; }
+.lines .ln .dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; margin-top: 8px; background: var(--line-2); }
+.lines .ln.ok .dot      { background: var(--ok); }
+.lines .ln.suspect .dot { background: var(--warn); }
+.lines .ln.wrong .dot   { background: var(--bad); }
+.lines .ln.wrong  { background: color-mix(in srgb, var(--bad) 5%, transparent); }
+.lines .ln .note { font-size: 13.5px; color: var(--ink-2); margin-top: 3px; }
+
+/* ── progress ─────────────────────────────────────────────────────────── */
+
+.bar { height: 9px; border-radius: 999px; background: var(--wash-2); overflow: hidden; position: relative; }
+.bar > i { display: block; height: 100%; background: var(--grad); border-radius: 999px; }
+/* An unconfident estimate is hatched, not solid — the app should not draw a
+   crisp 78% when what it means is "somewhere between 55 and 90". */
+.bar.unsure > i {
+  background-image: repeating-linear-gradient(115deg,
+    rgba(255,255,255,.55) 0 5px, rgba(255,255,255,0) 5px 10px), var(--grad);
+}
+.bar .band { position: absolute; top: 0; bottom: 0; background: rgba(25,27,26,.09); }
+
+.topic { display: grid; grid-template-columns: 1fr auto; gap: 3px 12px; align-items: center; }
+.topic .pct { font: 600 15px/1 var(--sans); font-variant-numeric: tabular-nums; }
+.topic .bar { grid-column: 1 / -1; margin-top: 5px; }
+
+.spark { display: flex; gap: 2px; align-items: flex-end; height: 22px; }
+.spark i { width: 4px; border-radius: 1px; background: var(--line-2); }
+.spark i.hit { background: var(--ok); }
+.spark i.miss { background: color-mix(in srgb, var(--bad) 60%, var(--wash-2)); }
+
+/* ── chat ─────────────────────────────────────────────────────────────── */
+
+.msg { max-width: 86%; padding: 10px 13px; border-radius: 15px; font-size: 15px; }
+.msg.them { background: var(--wash); border: 1px solid var(--line); border-bottom-left-radius: 5px; align-self: flex-start; }
+.msg.me { background: var(--grad); color: #fff; border-bottom-right-radius: 5px; align-self: flex-end; }
+.suggests { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 3px; -webkit-overflow-scrolling: touch; }
+.suggests button {
+  flex: 0 0 auto; padding: 7px 13px; border-radius: 999px;
+  background: var(--panel); border: 1px solid var(--line-2); font-size: 14px;
+}
+
+/* ── toast ────────────────────────────────────────────────────────────── */
+
+#toast {
+  position: fixed; z-index: 80; left: 50%; transform: translateX(-50%) translateY(14px);
+  bottom: calc(var(--safe-b) + var(--tabbar) + 14px);
+  max-width: min(92vw, 420px);
+  background: rgba(25,27,26,.94); color: #fff; -webkit-backdrop-filter: blur(10px);
+  padding: 11px 16px; border-radius: 12px; font-size: 14.5px;
+  opacity: 0; pointer-events: none; transition: opacity .2s ease, transform .2s ease;
+}
+#toast.on { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+.skeleton { background: linear-gradient(90deg, var(--wash) 25%, var(--wash-2) 37%, var(--wash) 63%);
+  background-size: 400% 100%; animation: sh 1.3s ease infinite; border-radius: 8px; height: 15px; }
+@keyframes sh { 0% { background-position: 100% 0 } 100% { background-position: -100% 0 } }
+
+.empty { text-align: center; color: var(--muted); padding: 34px 18px; }
+.empty .mark { width: 56px; height: 56px; opacity: .35; margin: 0 auto 12px; display: block; }
+
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+
+/* iPad: the paper gets the room it deserves and the tab bar moves to the side
+   of nothing — a phone-shaped column in the middle of a 12" screen is worse
+   than a wide one, so the shell just widens. */
+@media (min-width: 760px) {
+  main { padding-left: max(calc(var(--safe-l) + 28px), calc(50% - 460px)); padding-right: max(calc(var(--safe-r) + 28px), calc(50% - 460px)); }
+  .paper { height: 66vh; }
+  nav.tabs { grid-template-columns: repeat(5, minmax(0, 132px)); justify-content: center; }
+}
+</style>
+</head>
+<body>
+
+<!-- The gradient used by the tab-bar icons. One definition, referenced by url(). -->
+<svg width="0" height="0" aria-hidden="true" style="position:absolute">
+  <defs>
+    <linearGradient id="tabgrad" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#2B62EE"/><stop offset=".44" stop-color="#35B27C"/>
+      <stop offset=".83" stop-color="#EE6B2E"/><stop offset="1" stop-color="#DF4038"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<!-- ── sign in ────────────────────────────────────────────────────────── -->
+<section id="gate">
+  <div class="box">
+    <img class="mark" src="/icons/mark.svg" alt="">
+    <h1 class="grad-text">Mathathon</h1>
+    <p class="sub" data-i18n="gate.sub"></p>
+
+    <div class="stack" id="gate-name-step">
+      <input id="gate-nick" type="text" autocomplete="username" autocapitalize="none"
+             autocorrect="off" spellcheck="false" data-i18n-ph="gate.nick">
+      <button class="btn primary wide" id="gate-next" data-i18n="gate.next"></button>
+      <button class="btn quiet wide" id="gate-toggle" data-i18n="gate.toRegister"></button>
+    </div>
+
+    <div class="stack" id="gate-code-step" hidden>
+      <p class="sub" style="margin:0" id="gate-who"></p>
+      <div class="dots" id="gate-dots"><i></i><i></i><i></i><i></i></div>
+      <div class="pad" id="gate-pad">
+        <button>1</button><button>2</button><button>3</button>
+        <button>4</button><button>5</button><button>6</button>
+        <button>7</button><button>8</button><button>9</button>
+        <button class="wide" data-k="back" data-i18n="pad.back"></button><button>0</button>
+      </div>
+      <button class="btn quiet wide" id="gate-back" data-i18n="gate.back"></button>
+    </div>
+
+    <p class="err" id="gate-err"></p>
+  </div>
+</section>
+
+<!-- ── the app ────────────────────────────────────────────────────────── -->
+<div id="app">
+  <header class="top">
+    <img class="mark" src="/icons/mark.svg" alt="">
+    <span class="title">Mathathon</span>
+    <span class="spacer"></span>
+    <span class="chip" id="sync-chip"></span>
+  </header>
+
+  <main>
+    <section class="view" id="view-train"></section>
+    <section class="view" id="view-quiz"></section>
+    <section class="view" id="view-formulas"></section>
+    <section class="view" id="view-progress"></section>
+    <section class="view" id="view-settings"></section>
+  </main>
+
+  <nav class="tabs" id="tabs">
+    <button data-view="train">
+      <svg viewBox="0 0 24 24"><path d="M4 19h16M6 15l4-6 3 4 2-3 3 5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span data-i18n="tab.train"></span>
+    </button>
+    <button data-view="quiz">
+      <svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z" stroke-linejoin="round"/></svg>
+      <span data-i18n="tab.quiz"></span>
+    </button>
+    <button data-view="formulas">
+      <svg viewBox="0 0 24 24"><path d="M5 4h14v16H5z"/><path d="M8 9h8M8 13h8M8 17h4" stroke-linecap="round"/></svg>
+      <span data-i18n="tab.formulas"></span>
+    </button>
+    <button data-view="progress">
+      <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2" stroke-linecap="round"/></svg>
+      <span data-i18n="tab.progress"></span>
+    </button>
+    <button data-view="settings">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 3v2m0 14v2M4.2 4.2l1.5 1.5m12.6 12.6 1.5 1.5M3 12h2m14 0h2M4.2 19.8l1.5-1.5M18.3 5.7l1.5-1.5" stroke-linecap="round"/></svg>
+      <span data-i18n="tab.settings"></span>
+    </button>
+  </nav>
+</div>
+
+<div id="toast"></div>
+
+<script type="module" src="/js/main.js"></script>
+</body>
+</html>
