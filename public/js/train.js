@@ -218,14 +218,11 @@ export function mountTrain(host) {
       if (!blob) { state.checking = false; return; }
       const png = await blobToBase64(blob);
 
-      if (state.problem.id) {
-        state.verdict = await api.critique(state.problem.id, png, state.verdict, lang());
-      } else {
-        // A generated problem is not in the server's bank, so it is sent with
-        // its own statement attached rather than by id.
-        state.verdict = await api.critique('__generated__', png, state.verdict, lang())
-          .catch(() => { throw new Error('generated_critique_unsupported'); });
-      }
+      // A generated problem is not in the server's bank, so it travels inline.
+      state.verdict = await api.critique(
+        state.problem.id, png, state.verdict, lang(),
+        state.problem.id ? undefined : state.problem,
+      );
       await recordIfFinished();
     } catch (e) {
       if (!silent) reportError(e);
@@ -320,10 +317,13 @@ export function mountTrain(host) {
     const input = el('input', { type: 'text', autocapitalize: 'off', autocorrect: 'off', spellcheck: false, placeholder: t('train.answerPh') });
     const btn = el('button.btn.wide', {
       onclick: async () => {
-        if (!state.problem?.id || !input.value.trim()) return;
+        if (!state.problem || !input.value.trim()) return;
         const done = busy(btn, t('train.checking'));
         try {
-          const out = await api.mark(state.problem.id, input.value.trim(), lang());
+          const out = await api.mark(
+            state.problem.id, input.value.trim(), lang(),
+            state.problem.id ? undefined : state.problem,
+          );
           state.verdict = {
             readable: true, lines: [], firstErrorLine: out.correct ? -1 : 0,
             diagnosis: out.correct ? out.verdict : out.whatWentWrong,

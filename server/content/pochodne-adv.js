@@ -174,7 +174,7 @@ export default {
         pl: 'Siedemnaście wzorów, które trzeba mieć w palcach — dalej wszystko jest już tylko regułą '
           + 'sumy, iloczynu, ilorazu i łańcucha. Warto zauważyć symetrie: $\\arcsin$ i $\\arccos$ różnią się '
           + 'tylko znakiem, tak samo $\\operatorname{arctg}$ i $\\operatorname{arcctg}$, a $\\operatorname{tg}$ '
-          + 'i $\\operatorname{ctg}$ mają pochodne będące odwrotnościami kwadratów cosinusa i sinusa. '
+          + 'i $\\operatorname{ctg}$ mają pochodne będące, z dokładnością do znaku, odwrotnościami kwadratów cosinusa i sinusa. '
           + 'Wzory na $\\arcsin$ i $\\arccos$ obowiązują na $(-1,1)$, a na $\\operatorname{tg}$ — poza '
           + 'punktami $\\frac{\\pi}{2}+k\\pi$.',
         en: 'Seventeen formulas to know cold — after that everything is the sum, product, quotient and chain '

@@ -140,7 +140,7 @@ export default {
             { pl: 'Pionowa: mianownik zeruje się w $x=3$, licznik nie; granice jednostronne to $\\mp\\infty$. Zatem $x=3$.', en: 'Vertical at $x=3$.' },
             { pl: 'Pozioma: $\\lim_{x\\to\\pm\\infty}\\frac{2x+1}{x-3} = 2$. Zatem $y=2$.', en: 'Horizontal: the limit at both infinities is $2$.' },
           ],
-          trap: { pl: 'Wzięcie $y=\\frac21$ z wyrazów wolnych zamiast ilorazu współczynników wiodących.', en: 'Reading the ratio of constants instead of leading coefficients.' },
+          trap: { pl: 'Wzięcie $y=-\\frac13$ z ilorazu wyrazów wolnych $\\frac{1}{-3}$ zamiast ilorazu współczynników wiodących $\\frac21=2$.', en: 'Reading the ratio of constants $\\frac{1}{-3}$ instead of the leading coefficients $\\frac21=2$.' },
         },
         {
           id: 'asymptoty-l4-01',

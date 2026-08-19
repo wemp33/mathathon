@@ -470,7 +470,7 @@ export default {
           id: 'geom-iloczyn-symetryczny',
           tex: 'a_{k}\\cdot a_{n-k+1}=a_{1}\\cdot a_{n}',
           name: { pl: 'Iloczyn wyrazów równo odległych od końców', en: 'Product of terms equidistant from the ends' },
-          note: { pl: 'Geometryczny odpowiednik symetrii sum w ciągu arytmetycznym. Stąd iloczyn wszystkich $n$ wyrazów wynosi $(a_{1}a_{n})^{n/2}$.', en: 'The geometric counterpart of the symmetry of sums in an arithmetic sequence. Hence the product of all $n$ terms equals $(a_{1}a_{n})^{n/2}$.' },
+          note: { pl: 'Geometryczny odpowiednik symetrii sum w ciągu arytmetycznym. Stąd dla parzystego $n$ iloczyn wszystkich $n$ wyrazów wynosi $(a_{1}a_{n})^{n/2}$; przy nieparzystym $n$ wzór wymaga wyrazów dodatnich, bo środkowy wyraz to $\\pm\\sqrt{a_{1}a_{n}}$.', en: 'The geometric counterpart of the symmetry of sums in an arithmetic sequence. Hence for even $n$ the product of all $n$ terms equals $(a_{1}a_{n})^{n/2}$; for odd $n$ the formula requires positive terms, since the middle term is $\\pm\\sqrt{a_{1}a_{n}}$.' },
           drill: true,
         },
         {
@@ -483,7 +483,7 @@ export default {
       ],
       skills: [
         { id: 'geom-wyrazy-i-iloraz', title: { pl: 'Wyznaczanie wyrazów i ilorazu', en: 'Finding terms and the common ratio' }, levels: [1, 2, 3] },
-        { id: 'geom-suma-n-wyrazow', title: { pl: 'Suma $n$ wyrazów ciągu geometrycznego', en: 'Sum of $n$ terms of a geometric sequence' }, levels: [2, 3, 4] },
+        { id: 'geom-suma-n-wyrazow', title: { pl: 'Suma $n$ wyrazów ciągu geometrycznego', en: 'Sum of $n$ terms of a geometric sequence' }, levels: [2, 3, 4, 5] },
         { id: 'geom-srodkowy-wyraz', title: { pl: 'Własność środkowego wyrazu', en: 'The middle-term property' }, levels: [2, 3, 4] },
         { id: 'geom-uklad-rownan', title: { pl: 'Układy równań na $a_{1}$ i $q$', en: 'Systems of equations for $a_{1}$ and $q$' }, levels: [3, 4, 5] },
         { id: 'geom-monotonicznosc-znak', title: { pl: 'Monotoniczność i znak wyrazów', en: 'Monotonicity and the sign of the terms' }, levels: [3, 4] },

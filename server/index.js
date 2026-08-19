@@ -200,6 +200,24 @@ async function requireUser(req, res) {
   return user;
 }
 
+// An inline (generated) problem is client-supplied, so only the fields the AI
+// actually needs pass through, with sane size caps.
+function sanitizeInline(p) {
+  if (!p || typeof p !== 'object') return null;
+  const text = (v) => (typeof v === 'string' ? v.slice(0, 4000) : '');
+  const pair = (v) => (v && typeof v === 'object' ? { pl: text(v.pl), en: text(v.en) } : { pl: text(v), en: '' });
+  const prompt = pair(p.prompt);
+  if (!prompt.pl && !prompt.en) return null;
+  return {
+    id: null,
+    prompt,
+    answer: text(p.answer),
+    accept: Array.isArray(p.accept) ? p.accept.slice(0, 8).map(text) : [],
+    level: Number(p.level) || 3,
+    skill: typeof p.skill === 'string' ? p.skill : null,
+  };
+}
+
 const ROUTES = {
   'GET /api/health': async (req, res) => send(res, 200, {
     ok: true,
@@ -307,22 +325,26 @@ const ROUTES = {
     });
   },
 
+  // An AI-generated problem is not in the authored bank, so the client sends
+  // it back inline. That does mean the client saw the answer — acceptable for
+  // generated problems, since /generate handed the whole object over anyway;
+  // authored problems still never leave the server with their answers.
   'POST /api/practice/mark': async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
-    const { problemId, answer, lang } = await readJson(req);
-    const problem = getProblem(problemId);
+    const { problemId, problem: inline, answer, lang } = await readJson(req);
+    const problem = problemId ? getProblem(problemId) : sanitizeInline(inline);
     if (!problem) return fail(res, 404, 'unknown_problem');
     const out = await ai.mark(user.id, { problem, answer, lang });
     if (out.error) return fail(res, out.error === 'no_key' ? 428 : 502, out.error, out);
-    send(res, 200, { problem: { id: problem.id, level: problem.level, skill: problem.skill }, ...out.data });
+    send(res, 200, { problem: { id: problem.id ?? null, level: problem.level, skill: problem.skill }, ...out.data });
   },
 
   'POST /api/practice/critique': async (req, res) => {
     const user = await requireUser(req, res);
     if (!user) return;
-    const { problemId, png, previous, lang } = await readJson(req);
-    const problem = getProblem(problemId);
+    const { problemId, problem: inline, png, previous, lang } = await readJson(req);
+    const problem = problemId ? getProblem(problemId) : sanitizeInline(inline);
     if (!problem) return fail(res, 404, 'unknown_problem');
     if (typeof png !== 'string' || png.length < 100) return fail(res, 400, 'no_ink');
     const out = await ai.critique(user.id, { problem, ink: { png }, previous, lang });

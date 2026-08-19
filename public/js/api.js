@@ -92,11 +92,11 @@ export const api = {
   drills: () => get('/api/content/drills'),
 
   next: (opts) => post('/api/practice/next', opts),
-  mark: (problemId, answer, lang) => post('/api/practice/mark', { problemId, answer, lang }),
+  mark: (problemId, answer, lang, problem) => post('/api/practice/mark', { problemId, answer, lang, problem }),
   // Reading a page of handwriting is a slow call — the model is solving the
   // problem itself before it reads yours — so it gets a long leash.
-  critique: (problemId, png, previous, lang) =>
-    post('/api/practice/critique', { problemId, png, previous, lang }, { timeout: 180_000 }),
+  critique: (problemId, png, previous, lang, problem) =>
+    post('/api/practice/critique', { problemId, png, previous, lang, problem }, { timeout: 180_000 }),
   generate: (opts) => post('/api/practice/generate', opts, { timeout: 180_000 }),
   record: (skillId, level, score) => post('/api/practice/record', { skillId, level, score }),
   progress: () => get('/api/progress'),

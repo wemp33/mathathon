@@ -20,7 +20,7 @@ export default {
       prereq: ['tablica-pochodnych'],
       theory: {
         pl: 'Funkcja $F$ jest pierwotną funkcji $f$, gdy $F\' = f$. Całka nieoznaczona to zbiór '
-          + '\\emph{wszystkich} pierwotnych, stąd $+C$: dwie pierwotne tej samej funkcji różnią się o stałą, '
+          + '*wszystkich* pierwotnych, stąd $+C$: dwie pierwotne tej samej funkcji różnią się o stałą, '
           + 'bo ich różnica ma pochodną zerową. Pominięcie $+C$ nie jest kosmetyczną niedokładnością — '
           + 'to podanie jednej funkcji zamiast całej rodziny. Całkowanie jest liniowe: '
           + '$\\int(af+bg) = a\\int f + b\\int g$, ale nie ma reguły na iloczyn ani na iloraz — '
@@ -48,7 +48,7 @@ export default {
         { id: 'i-log-roznica', tex: '\\int \\frac{dx}{x^{2}-a^{2}} = \\frac{1}{2a}\\ln\\left|\\frac{x-a}{x+a}\\right| + C', name: { pl: 'Całka z różnicy kwadratów', en: 'Integral over a difference of squares' }, note: { pl: 'Wynika z rozkładu na ułamki proste. Uwaga na kolejność: $x-a$ w liczniku.', en: 'From partial fractions. Note the order: $x-a$ on top.' }, drill: true },
         { id: 'i-arcsin', tex: '\\int \\frac{dx}{\\sqrt{a^{2}-x^{2}}} = \\arcsin\\frac{x}{a} + C', name: { pl: 'Całka dająca arcus sinus', en: 'Integral giving arcsine' }, note: { pl: 'Tu przed funkcją NIE ma $\\frac1a$ — inaczej niż przy arcus tangensie.', en: 'Here there is NO $\\frac1a$ in front — unlike the arctangent case.' }, drill: true },
         { id: 'i-log-suma', tex: '\\int \\frac{dx}{\\sqrt{x^{2}+q}} = \\ln\\left|x + \\sqrt{x^{2}+q}\\right| + C', name: { pl: 'Całka logarytmiczna z pierwiastkiem', en: 'Logarithmic integral with a root' }, note: { pl: 'Zwana też $\\operatorname{arsinh}$ dla $q>0$. Działa też dla $q<0$ tam, gdzie pierwiastek jest określony.', en: 'Also $\\operatorname{arsinh}$ for $q>0$; works for $q<0$ where the root is defined.' }, drill: true },
-        { id: 'i-liniowosc', tex: '\\int \\big(af(x)+bg(x)\\big)dx = a\\int f(x)\\,dx + b\\int g(x)\\,dx', name: { pl: 'Liniowość całki', en: 'Linearity of the integral' }, note: { pl: 'Jedyna reguła algebraiczna, jaką całka ma. Nie ma reguły na iloczyn ani na iloraz.', en: 'The only algebraic rule the integral has. There is no product or quotient rule.' }, drill: true },
+        { id: 'i-liniowosc', tex: '\\int \\left(af(x)+bg(x)\\right)dx = a\\int f(x)\\,dx + b\\int g(x)\\,dx', name: { pl: 'Liniowość całki', en: 'Linearity of the integral' }, note: { pl: 'Jedyna reguła algebraiczna, jaką całka ma. Nie ma reguły na iloczyn ani na iloraz.', en: 'The only algebraic rule the integral has. There is no product or quotient rule.' }, drill: true },
       ],
       skills: [
         { id: 'proste-calki', title: { pl: 'Proste całki', en: 'Simple integrals' }, levels: [2, 3] },
@@ -76,12 +76,12 @@ export default {
           level: 3,
           prompt: { pl: 'Oblicz $\\int\\frac{dx}{x^{2}+9}$.', en: 'Compute $\\int\\frac{dx}{x^{2}+9}$.' },
           answer: '\\frac{1}{3}\\operatorname{arctg}\\frac{x}{3} + C',
-          accept: ['\\frac13\\arctan\\frac{x}{3}+C'],
+          accept: ['\\frac{1}{3}\\arctan\\frac{x}{3}+C'],
           solution: [
             { pl: 'To wzór $\\int\\frac{dx}{x^2+a^2}$ z $a=3$.', en: 'The table integral with $a=3$.' },
-            { pl: '$\\frac{1}{3}\\operatorname{arctg}\\frac{x}{3} + C$.', en: '$\\frac13\\operatorname{arctg}\\frac{x}{3}+C$.' },
+            { pl: '$\\frac{1}{3}\\operatorname{arctg}\\frac{x}{3} + C$.', en: '$\\frac{1}{3}\\operatorname{arctg}\\frac{x}{3}+C$.' },
           ],
-          trap: { pl: 'Napisanie $\\operatorname{arctg}\\frac{x}{3}$ bez czynnika $\\frac13$ albo $\\frac13\\operatorname{arctg}x$ bez podzielenia argumentu.', en: 'Dropping the $\\frac13$, or forgetting to divide the argument.' },
+          trap: { pl: 'Napisanie $\\operatorname{arctg}\\frac{x}{3}$ bez czynnika $\\frac{1}{3}$ albo $\\frac{1}{3}\\operatorname{arctg}x$ bez podzielenia argumentu.', en: 'Dropping the $\\frac{1}{3}$, or forgetting to divide the argument.' },
         },
         {
           id: 'tablica-calek-l4-01',
@@ -94,7 +94,7 @@ export default {
             { pl: 'Wzór $\\int\\frac{dx}{\\sqrt{a^2-x^2}}=\\arcsin\\frac{x}{a}+C$ z $a=5$.', en: 'The table integral with $a=5$.' },
             { pl: 'Dziedzina: $x\\in(-5,5)$, bo pod pierwiastkiem musi być liczba dodatnia.', en: 'Domain: $x\\in(-5,5)$.' },
           ],
-          trap: { pl: 'Dopisanie czynnika $\\frac15$ przez analogię do arcus tangensa — przy arcus sinusie go nie ma.', en: 'Adding a $\\frac15$ by analogy with arctangent — there is none here.' },
+          trap: { pl: 'Dopisanie czynnika $\\frac{1}{5}$ przez analogię do arcus tangensa — przy arcus sinusie go nie ma.', en: 'Adding a $\\frac{1}{5}$ by analogy with arctangent — there is none here.' },
         },
         {
           id: 'tablica-calek-l3-02',
@@ -131,7 +131,7 @@ export default {
           + 'and convert back at the end.',
       },
       formulas: [
-        { id: 'podstawienie', tex: '\\int f\\big(g(x)\\big)g\'(x)\\,dx = \\int f(u)\\,du,\\quad u=g(x)', name: { pl: 'Wzór na podstawienie', en: 'Substitution formula' }, note: { pl: 'Warunek: $g\'$ musi być w całce, choćby z dokładnością do stałego czynnika.', en: 'Condition: $g\'$ must be present, up to a constant factor.' }, drill: true },
+        { id: 'podstawienie', tex: '\\int f\\left(g(x)\\right)g\'(x)\\,dx = \\int f(u)\\,du,\\quad u=g(x)', name: { pl: 'Wzór na podstawienie', en: 'Substitution formula' }, note: { pl: 'Warunek: $g\'$ musi być w całce, choćby z dokładnością do stałego czynnika.', en: 'Condition: $g\'$ must be present, up to a constant factor.' }, drill: true },
         { id: 'calka-g-prim-przez-g', tex: '\\int \\frac{g\'(x)}{g(x)}\\,dx = \\ln|g(x)| + C', name: { pl: 'Całka typu $g\'/g$', en: 'The $g\'/g$ integral' }, note: { pl: 'Warto rozpoznawać od razu — pojawia się częściej niż jakikolwiek inny wzór.', en: 'Worth recognising on sight; it appears more often than any other pattern.' }, drill: true },
         { id: 'calka-liniowa-wewnetrzna', tex: '\\int f(ax+b)\\,dx = \\frac{1}{a}F(ax+b) + C', name: { pl: 'Podstawienie liniowe', en: 'Linear substitution' }, note: { pl: 'Czynnik $\\frac1a$ jest tym, co ginie przy „całkowaniu w pamięci”.', en: 'The $\\frac1a$ is what disappears when you integrate in your head.' }, drill: true },
       ],
@@ -173,12 +173,12 @@ export default {
           level: 4,
           prompt: { pl: 'Oblicz $\\int \\sin(5x-2)\\,dx$.', en: 'Compute $\\int \\sin(5x-2)\\,dx$.' },
           answer: '-\\frac{1}{5}\\cos(5x-2) + C',
-          accept: ['-\\frac15\\cos(5x-2)+C'],
+          accept: ['-\\frac{1}{5}\\cos(5x-2)+C'],
           solution: [
             { pl: 'Podstawienie liniowe $u=5x-2$, $du=5\\,dx$, więc $dx=\\frac{du}{5}$.', en: 'Let $u=5x-2$, $dx = \\frac{du}{5}$.' },
-            { pl: '$\\frac15\\int\\sin u\\,du = -\\frac15\\cos u + C$.', en: '$\\frac15\\int\\sin u\\,du = -\\frac15\\cos u + C$.' },
+            { pl: '$\\frac{1}{5}\\int\\sin u\\,du = -\\frac{1}{5}\\cos u + C$.', en: '$\\frac{1}{5}\\int\\sin u\\,du = -\\frac{1}{5}\\cos u + C$.' },
           ],
-          trap: { pl: 'Zapomnienie czynnika $\\frac15$ — sprawdzenie przez różniczkowanie natychmiast go ujawnia.', en: 'Forgetting the $\\frac15$ — differentiating the answer exposes it at once.' },
+          trap: { pl: 'Zapomnienie czynnika $\\frac{1}{5}$ — sprawdzenie przez różniczkowanie natychmiast go ujawnia.', en: 'Forgetting the $\\frac{1}{5}$ — differentiating the answer exposes it at once.' },
         },
         {
           id: 'calkowanie-podstawienie-l5-01',
@@ -186,7 +186,7 @@ export default {
           level: 5,
           prompt: { pl: 'Oblicz $\\int \\frac{\\ln x}{x}\\,dx$.', en: 'Compute $\\int \\frac{\\ln x}{x}\\,dx$.' },
           answer: '\\frac{\\ln^{2}x}{2} + C',
-          accept: ['\\frac{(\\ln x)^2}{2}+C', '\\frac12\\ln^2 x + C'],
+          accept: ['\\frac{(\\ln x)^2}{2}+C', '\\frac{1}{2}\\ln^2 x + C'],
           solution: [
             { pl: 'Podstawiamy $u=\\ln x$, wtedy $du=\\frac{dx}{x}$ — i $\\frac{dx}{x}$ jest w całce.', en: 'Let $u=\\ln x$, so $du = \\frac{dx}{x}$, which is present.' },
             { pl: '$\\int u\\,du = \\frac{u^2}{2}+C = \\frac{\\ln^2 x}{2}+C$.', en: '$\\int u\\,du = \\frac{\\ln^2 x}{2}+C$.' },
@@ -204,7 +204,7 @@ export default {
       prereq: ['calkowanie-podstawienie'],
       theory: {
         pl: 'Wzór $\\int u\\,dv = uv - \\int v\\,du$ pochodzi z reguły iloczynu scałkowanej stronami. '
-          + 'Cała sztuka to wybór $u$: powinno być tym czynnikiem, który przy różniczkowaniu \\emph{upraszcza się}. '
+          + 'Cała sztuka to wybór $u$: powinno być tym czynnikiem, który przy różniczkowaniu *upraszcza się*. '
           + 'Praktyczna kolejność pierwszeństwa dla $u$: logarytm, funkcja odwrotna trygonometryczna, wielomian, '
           + 'funkcja trygonometryczna, wykładnicza. Przy $\\int e^x\\sin x\\,dx$ całka wraca do siebie po dwóch '
           + 'krokach — wtedy traktuje się ją jak niewiadomą i rozwiązuje równanie.',
@@ -245,7 +245,7 @@ export default {
           accept: ['\\frac{x^2}{2}\\ln x - \\frac{x^2}{4}+C', '\\frac{x^2}{4}(2\\ln x - 1)+C'],
           solution: [
             { pl: '$u=\\ln x$, $dv = x\\,dx$, więc $du=\\frac{dx}{x}$, $v=\\frac{x^2}{2}$.', en: '$u=\\ln x$, $v=\\frac{x^2}{2}$.' },
-            { pl: '$\\frac{x^2\\ln x}{2} - \\int\\frac{x^2}{2}\\cdot\\frac1x dx = \\frac{x^2\\ln x}{2} - \\frac12\\int x\\,dx$.', en: '$= \\frac{x^2\\ln x}{2} - \\frac12\\int x\\,dx$.' },
+            { pl: '$\\frac{x^2\\ln x}{2} - \\int\\frac{x^2}{2}\\cdot\\frac1x dx = \\frac{x^2\\ln x}{2} - \\frac{1}{2}\\int x\\,dx$.', en: '$= \\frac{x^2\\ln x}{2} - \\frac{1}{2}\\int x\\,dx$.' },
             { pl: '$= \\frac{x^2\\ln x}{2} - \\frac{x^2}{4} + C$.', en: '$= \\frac{x^2\\ln x}{2} - \\frac{x^2}{4}+C$.' },
           ],
           trap: { pl: 'Wzięcie $u=x$ — zostaje $\\int\\frac{x^2}{2}\\cdot$ coś z logarytmem, czyli gorzej niż na starcie.', en: 'Taking $u=x$ leaves a worse integral than you started with.' },
@@ -256,7 +256,7 @@ export default {
           level: 6,
           prompt: { pl: 'Oblicz $\\int e^{x}\\sin x\\,dx$.', en: 'Compute $\\int e^{x}\\sin x\\,dx$.' },
           answer: '\\frac{e^{x}(\\sin x - \\cos x)}{2} + C',
-          accept: ['\\frac12 e^x(\\sin x-\\cos x)+C'],
+          accept: ['\\frac{1}{2} e^x(\\sin x-\\cos x)+C'],
           solution: [
             { pl: 'Oznaczmy $I=\\int e^x\\sin x\\,dx$. Bierzemy $u=\\sin x$, $dv=e^xdx$: $I = e^x\\sin x - \\int e^x\\cos x\\,dx$.', en: 'Let $I=\\int e^x\\sin x\\,dx$. First pass: $I = e^x\\sin x - \\int e^x\\cos x\\,dx$.' },
             { pl: 'Drugi raz, na $\\int e^x\\cos x\\,dx$, z $u=\\cos x$: $\\int e^x\\cos x\\,dx = e^x\\cos x + \\int e^x\\sin x\\,dx = e^x\\cos x + I$.', en: 'Second pass: $\\int e^x\\cos x\\,dx = e^x\\cos x + I$.' },
